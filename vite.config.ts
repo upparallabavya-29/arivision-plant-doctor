@@ -9,5 +9,5 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  base: "/AriVision-AI/",   // ← THIS LINE IS SUPER IMPORTANT
+  base: "./",
 });
