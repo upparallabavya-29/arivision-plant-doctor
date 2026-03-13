@@ -2,6 +2,7 @@ export interface User {
     id: string;
     name: string;
     email: string;
+    password?: string; // Added password for local auth
     avatar: string;
     role: "admin" | "user";
     lastLogin: string;
@@ -15,21 +16,47 @@ export function getCurrentUser(): User | null {
     return data ? JSON.parse(data) : null;
 }
 
-export function loginUser(user: Omit<User, "lastLogin">): User {
+// Replaced loginUser with one that checks credentials
+export function loginUser(email: string, password?: string): User {
+    const allUsers = getAllUsers();
+    const user = allUsers.find(u => u.email === email && (!u.password || u.password === password));
+
+    if (!user) {
+        throw new Error("Invalid email or password");
+    }
+
     const fullUser: User = { ...user, lastLogin: new Date().toISOString() };
     localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(fullUser));
 
-    // Save to all users tracking list
-    const allUsers = getAllUsers();
+    // Update last login in all users
     const existingIndex = allUsers.findIndex((u) => u.email === fullUser.email);
-    if (existingIndex >= 0) {
-        allUsers[existingIndex] = fullUser;
-    } else {
-        allUsers.push(fullUser);
-    }
+    allUsers[existingIndex] = fullUser;
     localStorage.setItem(ALL_USERS_KEY, JSON.stringify(allUsers));
 
     return fullUser;
+}
+
+// Added registerUser
+export function registerUser(user: Omit<User, "id" | "lastLogin" | "role" | "avatar">): User {
+    const allUsers = getAllUsers();
+
+    if (allUsers.some(u => u.email === user.email)) {
+        throw new Error("User with this email already exists");
+    }
+
+    const newUser: User = {
+        ...user,
+        id: Math.random().toString(36).substring(2, 9),
+        role: "user",
+        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(user.name)}&backgroundColor=random`,
+        lastLogin: new Date().toISOString()
+    };
+
+    allUsers.push(newUser);
+    localStorage.setItem(ALL_USERS_KEY, JSON.stringify(allUsers));
+    localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(newUser));
+
+    return newUser;
 }
 
 export function logoutUser() {

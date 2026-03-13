@@ -3,13 +3,11 @@ import { LogOut, Leaf, LogIn } from "lucide-react";
 import { motion } from "framer-motion";
 import { getCurrentUser, logoutUser, User } from "@/lib/auth";
 import { useState } from "react";
-import GoogleLoginModal from "./GoogleLoginModal";
 
 const TopBar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(getCurrentUser());
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
   const handleSignOut = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -110,8 +108,8 @@ const TopBar = () => {
           </button>
         </div>
       ) : (
-        <button
-          onClick={() => setIsLoginModalOpen(true)}
+        <Link
+          to="/login"
           className="flex items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-bold text-white transition-all duration-200"
           style={{ background: "hsl(0 0% 100% / 0.15)" }}
           onMouseEnter={(e) => {
@@ -123,18 +121,8 @@ const TopBar = () => {
         >
           <LogIn className="h-4 w-4" />
           Sign In
-        </button>
+        </Link>
       )}
-
-      <GoogleLoginModal
-        isOpen={isLoginModalOpen}
-        onClose={() => setIsLoginModalOpen(false)}
-        onSuccess={(u) => {
-          setUser(u);
-          setIsLoginModalOpen(false);
-          // Small delay then reload if they want to access protected routing (optional)
-        }}
-      />
     </header>
   );
 };
