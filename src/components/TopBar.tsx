@@ -2,16 +2,20 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { LogOut, Leaf, LogIn } from "lucide-react";
 import { motion } from "framer-motion";
 import { getCurrentUser, logoutUser, User } from "@/lib/auth";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const TopBar = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const [user, setUser] = useState<User | null>(getCurrentUser());
+  const [user, setUser] = useState<User | null>(null);
 
-  const handleSignOut = (e: React.MouseEvent) => {
+  useEffect(() => {
+    getCurrentUser().then(setUser);
+  }, []);
+
+  const handleSignOut = async (e: React.MouseEvent) => {
     e.preventDefault();
-    logoutUser();
+    await logoutUser();
     setUser(null);
     navigate("/");
   };

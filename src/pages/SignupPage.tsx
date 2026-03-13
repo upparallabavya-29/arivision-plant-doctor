@@ -21,7 +21,7 @@ export default function SignupPage() {
         try {
             // Simulate network delay
             await new Promise((resolve) => setTimeout(resolve, 800));
-            registerUser({ name, email, password });
+            await registerUser({ name, email, password });
             toast.success("Account created successfully!");
             navigate("/dashboard");
         } catch (error: unknown) {

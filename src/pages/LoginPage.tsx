@@ -20,7 +20,7 @@ export default function LoginPage() {
         try {
             // Simulate network delay
             await new Promise((resolve) => setTimeout(resolve, 800));
-            loginUser(email, password);
+            await loginUser(email, password);
             toast.success("Welcome back!");
             navigate("/dashboard");
         } catch (error: unknown) {

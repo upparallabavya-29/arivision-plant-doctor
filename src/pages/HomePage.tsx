@@ -1,13 +1,18 @@
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowRight, ScanLine, Shield, Zap, Leaf } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import FallingLeaves from "@/components/FallingLeaves";
-import { getCurrentUser } from "@/lib/auth";
+import { getCurrentUser, User } from "@/lib/auth";
 
 const HomePage = () => {
-  const user = getCurrentUser();
+  const [user, setUser] = useState<User | null>(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    getCurrentUser().then(setUser);
+  }, []);
 
   return (
     <div className="flex min-h-screen flex-col bg-background relative">

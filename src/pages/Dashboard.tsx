@@ -1,11 +1,51 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Camera, Upload, Clock, BarChart3 } from "lucide-react";
+import { Camera, Upload, Clock, BarChart3, Loader2 } from "lucide-react";
 import TopBar from "@/components/TopBar";
 import BottomNav from "@/components/BottomNav";
 import FallingLeaves from "@/components/FallingLeaves";
+import { getScans, getScanStats, ScanRecord } from "@/lib/database";
 
 const Dashboard = () => {
+  const [stats, setStats] = useState({ totalScans: 0, uniqueDiseases: 0 });
+  const [recentScans, setRecentScans] = useState<ScanRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadDashboardData() {
+      try {
+        const [statsData, scansData] = await Promise.all([
+          getScanStats(),
+          getScans(),
+        ]);
+        setStats(statsData);
+        setRecentScans(scansData.slice(0, 3));
+      } catch (error) {
+        console.error("Dashboard data load error:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadDashboardData();
+  }, []);
+
+  const formatRelativeTime = (dateString?: string) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffSec = Math.floor(diffMs / 1000);
+    const diffMin = Math.floor(diffSec / 60);
+    const diffHr = Math.floor(diffMin / 60);
+    const diffDay = Math.floor(diffHr / 24);
+
+    if (diffDay > 0) return `${diffDay} day${diffDay > 1 ? "s" : ""} ago`;
+    if (diffHr > 0) return `${diffHr} hr${diffHr > 1 ? "s" : ""} ago`;
+    if (diffMin > 0) return `${diffMin} min${diffMin > 1 ? "s" : ""} ago`;
+    return "Just now";
+  };
+
   return (
     <div className="flex min-h-screen flex-col bg-background pb-20 relative">
       <FallingLeaves />
@@ -31,11 +71,15 @@ const Dashboard = () => {
         >
           <div className="data-grid-cell rounded-lg">
             <p className="text-xs text-muted-foreground">Total Scans</p>
-            <p className="font-mono text-2xl font-semibold mt-1">12</p>
+            <p className="font-mono text-2xl font-semibold mt-1">
+              {loading ? "..." : stats.totalScans}
+            </p>
           </div>
           <div className="data-grid-cell rounded-lg">
             <p className="text-xs text-muted-foreground">Diseases Found</p>
-            <p className="font-mono text-2xl font-semibold mt-1">8</p>
+            <p className="font-mono text-2xl font-semibold mt-1">
+              {loading ? "..." : stats.uniqueDiseases}
+            </p>
           </div>
         </motion.div>
 
@@ -72,30 +116,37 @@ const Dashboard = () => {
             Recent Scans
           </h2>
           <div className="space-y-2">
-            {[
-              { plant: "Tomato", disease: "Early Blight", conf: 96, time: "2 hrs ago" },
-              { plant: "Potato", disease: "Late Blight", conf: 92, time: "1 day ago" },
-              { plant: "Apple", disease: "Apple Scab", conf: 89, time: "3 days ago" },
-            ].map((item, i) => (
-              <div key={i} className="flex items-center justify-between rounded-lg border border-border bg-card px-4 py-3">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-9 w-9 items-center justify-center rounded bg-secondary">
-                    <BarChart3 className="h-4 w-4 text-muted-foreground" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium">{item.plant}</p>
-                    <p className="text-xs text-muted-foreground">{item.disease}</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="font-mono text-sm font-semibold">{item.conf}%</p>
-                  <p className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                    <Clock className="h-3 w-3" />
-                    {item.time}
-                  </p>
-                </div>
+            {loading ? (
+              <div className="flex flex-col items-center justify-center py-8 text-muted-foreground bg-card/10 rounded-xl border border-dashed border-border/50">
+                <Loader2 className="h-6 w-6 animate-spin mb-2 opacity-30" />
+                <p className="text-[10px] uppercase tracking-widest font-bold">Syncing Records...</p>
               </div>
-            ))}
+            ) : recentScans.length === 0 ? (
+              <div className="text-center py-8 border border-dashed rounded-xl bg-card/20">
+                <p className="text-xs text-muted-foreground">No recent activity detected.</p>
+              </div>
+            ) : (
+              recentScans.map((item, i) => (
+                <div key={item.id || i} className="flex items-center justify-between rounded-lg border border-border bg-card px-4 py-3">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-9 w-9 items-center justify-center rounded bg-secondary">
+                      <BarChart3 className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium">{item.plant}</p>
+                      <p className="text-xs text-muted-foreground">{item.disease}</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-mono text-sm font-semibold">{item.confidence}%</p>
+                    <p className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                      <Clock className="h-3 w-3" />
+                      {formatRelativeTime(item.created_at)}
+                    </p>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </motion.div>
       </main>

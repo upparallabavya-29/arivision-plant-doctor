@@ -1,6 +1,7 @@
+import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Home, ScanLine, Clock, Info, Shield } from "lucide-react";
-import { getCurrentUser } from "@/lib/auth";
+import { getCurrentUser, User } from "@/lib/auth";
 
 const navItems = [
   { to: "/dashboard", icon: Home, label: "Home" },
@@ -11,7 +12,11 @@ const navItems = [
 
 const BottomNav = () => {
   const location = useLocation();
-  const user = getCurrentUser();
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    getCurrentUser().then(setUser);
+  }, []);
 
   const items = [...navItems];
   if (user?.role === "admin") {

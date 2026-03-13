@@ -9,6 +9,7 @@ import ScanAnimation from "@/components/ScanAnimation";
 import FallingLeaves from "@/components/FallingLeaves";
 import CameraCapture from "@/components/CameraCapture";
 import { getRandomDiagnosis } from "@/lib/mockDiagnosis";
+import { saveScan } from "@/lib/database";
 
 const ScanPage = () => {
   const [image, setImage] = useState<string | null>(null);
@@ -29,8 +30,20 @@ const ScanPage = () => {
     setIsScanning(true);
   };
 
-  const onScanComplete = () => {
+  const onScanComplete = async () => {
     const result = getRandomDiagnosis();
+
+    try {
+      await saveScan({
+        plant: result.plant,
+        disease: result.disease,
+        confidence: result.confidence,
+        status: result.status
+      });
+    } catch (error) {
+      console.error("Failed to save scan to Supabase:", error);
+    }
+
     setIsScanning(false);
     navigate("/results", { state: { result, imageSrc: image } });
   };

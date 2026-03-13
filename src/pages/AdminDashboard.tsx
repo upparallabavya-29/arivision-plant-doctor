@@ -15,13 +15,16 @@ const AdminDashboard = () => {
     const [activeTab, setActiveTab] = useState<"users" | "feedbacks">("users");
 
     useEffect(() => {
-        const me = getCurrentUser();
-        if (!me || me.role !== "admin") {
-            navigate("/"); // Redirect non-admins to home
-            return;
+        async function initAdmin() {
+            const me = await getCurrentUser();
+            if (!me || me.role !== "admin") {
+                navigate("/"); // Redirect non-admins to home
+                return;
+            }
+            setUsers(getAllUsers());
+            setFeedbacks(getFeedbacks());
         }
-        setUsers(getAllUsers());
-        setFeedbacks(getFeedbacks());
+        initAdmin();
     }, [navigate]);
 
     return (

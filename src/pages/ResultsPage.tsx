@@ -47,10 +47,10 @@ const ResultsPage = () => {
         ? "bg-yellow-500/10 border-yellow-500/30"
         : "bg-primary/10 border-primary/30";
 
-  const submitFeedback = () => {
+  const submitFeedback = async () => {
     if (!feedback) return;
 
-    const user = getCurrentUser();
+    const user = await getCurrentUser();
 
     saveFeedback({
       userEmail: user?.email || "anonymous@example.com",
