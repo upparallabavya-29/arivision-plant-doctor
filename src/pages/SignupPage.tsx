@@ -24,8 +24,12 @@ export default function SignupPage() {
             registerUser({ name, email, password });
             toast.success("Account created successfully!");
             navigate("/dashboard");
-        } catch (error: any) {
-            toast.error(error.message || "Failed to create account.");
+        } catch (error: unknown) {
+            if (error instanceof Error) {
+                toast.error(error.message || "Failed to create account.");
+            } else {
+                toast.error("Failed to create account.");
+            }
         } finally {
             setLoading(false);
         }

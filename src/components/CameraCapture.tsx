@@ -31,7 +31,7 @@ export default function CameraCapture({ onCapture, onClose }: CameraCaptureProps
                 setStream(newStream);
                 currentStream = newStream;
                 setError("");
-            } catch (err: any) {
+            } catch (err: unknown) {
                 setError("Could not access camera. Please check camera permissions in your browser.");
                 console.error("Camera access error:", err);
             }

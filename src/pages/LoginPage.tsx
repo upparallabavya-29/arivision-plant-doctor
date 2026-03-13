@@ -23,8 +23,12 @@ export default function LoginPage() {
             loginUser(email, password);
             toast.success("Welcome back!");
             navigate("/dashboard");
-        } catch (error: any) {
-            toast.error(error.message || "Invalid credentials. Please try again.");
+        } catch (error: unknown) {
+            if (error instanceof Error) {
+                toast.error(error.message || "Invalid credentials. Please try again.");
+            } else {
+                toast.error("Invalid credentials. Please try again.");
+            }
         } finally {
             setLoading(false);
         }
