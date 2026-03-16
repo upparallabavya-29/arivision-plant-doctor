@@ -116,8 +116,41 @@ const diseases: DiagnosisResult[] = [
     careTips:
       "Scout fields from tillering onward. Avoid dense plantings that trap humidity around leaves.",
   },
+  // --- Expanded Dataset (100+ Plants) ---
+  ...[
+    "Mango", "Banana", "Orange", "Lemon", "Soybean", "Cotton", "Sugarcane", "Coffee", "Tea", "Rubber",
+    "Cucumber", "Watermelon", "Pumpkin", "Onion", "Garlic", "Carrot", "Radish", "Cabbage", "Cauliflower", "Broccoli",
+    "Spinach", "Lettuce", "Pepper", "Chili", "Eggplant", "Strawberry", "Blueberry", "Raspberry", "Grapefruit", "Papaya",
+    "Guava", "Pineapple", "Coconut", "Olive", "Almond", "Walnut", "Peanut", "Sunflower", "Oak", "Pine",
+    "Maple", "Rose", "Tulip", "Orchid", "Lily", "Daisy", "Lavender", "Mint", "Basil", "Rosemary",
+    "Thyme", "Aloe Vera", "Cactus", "Bamboo", "Jasmine", "Hibiscus", "Marigold", "Zinnia", "Petunia", "Begonia",
+    "Geranium", "Pansy", "Peony", "Azalea", "Rhododendron", "Camellia", "Magnolia", "Cherry Blossom", "Peach", "Plum",
+    "Apricot", "Pear", "Quince", "Fig", "Pomegranate", "Date Palm", "Avocado", "Kiwi", "Cashew", "Pistachio",
+    "Cacao", "Vanilla", "Ginger", "Turmeric", "Cinnamon", "Clove", "Nutmeg", "Black Pepper", "Cardamom", "Stevia",
+    "Tobacco", "Hemp", "Flax", "Jute", "Sorghum", "Millet", "Barley", "Oats", "Rye", "Buckwheat",
+    "Lentil", "Chickpea", "Pea", "Bean", "Mung Bean"
+  ].map(p => ({
+    plant: p,
+    leafName: `${p} Leaf`,
+    disease: "Healthy",
+    confidence: 98,
+    status: "healthy" as const,
+    modelUsed: "ViT + Swin Ensemble" as const,
+    description: `The ${p} plant appears to be in excellent health. No significant pathlogical markers or stress indicators were detected by the ensemble analysis.`,
+    cure: "No treatment required. Maintain regular watering and fertilization schedules.",
+    prevention: "Continue standard care protocols. Ensure adequate sunlight and pest monitoring.",
+    careTips: "Clean leaves occasionally to ensure maximum photosynthesis. Monitor for early signs of seasonal pests."
+  }))
 ];
 
-export function getRandomDiagnosis(): DiagnosisResult {
+export const PLANTS = Array.from(new Set(diseases.map(d => d.plant)));
+
+export function getRandomDiagnosis(plantName?: string): DiagnosisResult {
+  if (plantName && plantName !== "Unknown") {
+    const filtered = diseases.filter(d => d.plant.toLowerCase() === plantName.toLowerCase());
+    if (filtered.length > 0) {
+      return filtered[Math.floor(Math.random() * filtered.length)];
+    }
+  }
   return diseases[Math.floor(Math.random() * diseases.length)];
 }

@@ -1,18 +1,35 @@
 import { useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Camera, Upload, X, ArrowRight } from "lucide-react";
+import { Camera, Upload, X, ArrowRight, Leaf, Check, ChevronsUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import TopBar from "@/components/TopBar";
 import BottomNav from "@/components/BottomNav";
 import ScanAnimation from "@/components/ScanAnimation";
 import FallingLeaves from "@/components/FallingLeaves";
 import CameraCapture from "@/components/CameraCapture";
-import { getRandomDiagnosis } from "@/lib/mockDiagnosis";
+import { getRandomDiagnosis, PLANTS } from "@/lib/mockDiagnosis";
 import { saveScan } from "@/lib/database";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 
 const ScanPage = () => {
   const [image, setImage] = useState<string | null>(null);
+  const [selectedPlant, setSelectedPlant] = useState<string>("");
+  const [open, setOpen] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -20,6 +37,15 @@ const ScanPage = () => {
   const navigate = useNavigate();
 
   const handleFile = useCallback((file: File) => {
+    // Attempt to auto-detect plant from filename
+    const filename = file.name.toLowerCase();
+    const detectedPlant = PLANTS.find(p => filename.includes(p.toLowerCase()));
+    if (detectedPlant) {
+      setSelectedPlant(detectedPlant);
+    } else {
+      setSelectedPlant(""); // Reset if no detection
+    }
+
     const reader = new FileReader();
     reader.onload = (e) => setImage(e.target?.result as string);
     reader.readAsDataURL(file);
@@ -31,7 +57,7 @@ const ScanPage = () => {
   };
 
   const onScanComplete = async () => {
-    const result = getRandomDiagnosis();
+    const result = getRandomDiagnosis(selectedPlant);
 
     try {
       await saveScan({
@@ -118,10 +144,77 @@ const ScanPage = () => {
                 </button>
               </div>
 
+              {/* Plant Selection */}
+              <div className="space-y-3 rounded-xl bg-accent/5 p-4 border border-accent/10">
+                <Label htmlFor="plant-select" className="text-sm font-semibold flex items-center gap-2 text-primary">
+                  <Leaf className="h-4 w-4" />
+                  What plant is this?
+                </Label>
+
+                <Popover open={open} onOpenChange={setOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={open}
+                      className="w-full justify-between h-12 bg-card border-border font-normal text-left"
+                    >
+                      <span className="truncate">
+                        {selectedPlant
+                          ? PLANTS.find((plant) => plant === selectedPlant)
+                          : "Select plant type (Searchable...)"}
+                      </span>
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[calc(100vw-2rem)] sm:w-[400px] p-0 z-50">
+                    <Command className="border border-border">
+                      <CommandInput placeholder="Search plant species..." />
+                      <CommandList className="max-h-[250px]">
+                        <CommandEmpty>No plant species found.</CommandEmpty>
+                        <CommandGroup heading="Available Plants">
+                          {PLANTS.map((plant) => (
+                            <CommandItem
+                              key={plant}
+                              value={plant}
+                              onSelect={(currentValue) => {
+                                // Match the value casing
+                                const matchedPlant = PLANTS.find(p => p.toLowerCase() === currentValue.toLowerCase()) || currentValue;
+                                setSelectedPlant(matchedPlant === selectedPlant ? "" : matchedPlant);
+                                setOpen(false);
+                              }}
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  selectedPlant === plant ? "opacity-100" : "opacity-0"
+                                )}
+                              />
+                              {plant}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+
+                {!selectedPlant && (
+                  <p className="text-[11px] text-destructive font-medium animate-pulse">
+                    Please select a plant type to proceed with analysis.
+                  </p>
+                )}
+              </div>
+
               {/* Analyze button */}
-              <Button onClick={startScan} size="lg" className="w-full gap-2">
+              <Button
+                onClick={startScan}
+                size="lg"
+                className="w-full h-14 text-lg gap-2 shadow-lg shadow-primary/20"
+                disabled={!selectedPlant}
+              >
                 Analyze Pathology
-                <ArrowRight className="h-4 w-4" />
+                <ArrowRight className="h-5 w-5" />
               </Button>
             </div>
           )}
@@ -129,16 +222,18 @@ const ScanPage = () => {
       </main>
 
       <BottomNav />
-      {isCameraOpen && (
-        <CameraCapture
-          onCapture={(imageSrc) => {
-            setImage(imageSrc);
-            setIsCameraOpen(false);
-          }}
-          onClose={() => setIsCameraOpen(false)}
-        />
-      )}
-    </div>
+      {
+        isCameraOpen && (
+          <CameraCapture
+            onCapture={(imageSrc) => {
+              setImage(imageSrc);
+              setIsCameraOpen(false);
+            }}
+            onClose={() => setIsCameraOpen(false)}
+          />
+        )
+      }
+    </div >
   );
 };
 
