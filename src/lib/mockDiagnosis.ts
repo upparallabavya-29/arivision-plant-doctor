@@ -145,12 +145,23 @@ const diseases: DiagnosisResult[] = [
 
 export const PLANTS = Array.from(new Set(diseases.map(d => d.plant)));
 
-export function getRandomDiagnosis(plantName?: string): DiagnosisResult {
+export function getRandomDiagnosis(plantName?: string, isHealthy: boolean = false): DiagnosisResult {
+  let filtered = diseases;
+
   if (plantName && plantName !== "Unknown") {
-    const filtered = diseases.filter(d => d.plant.toLowerCase() === plantName.toLowerCase());
-    if (filtered.length > 0) {
-      return filtered[Math.floor(Math.random() * filtered.length)];
+    filtered = filtered.filter(d => d.plant.toLowerCase() === plantName.toLowerCase());
+  }
+
+  if (isHealthy) {
+    const healthyResults = filtered.filter(d => d.status === "healthy");
+    if (healthyResults.length > 0) {
+      return healthyResults[Math.floor(Math.random() * healthyResults.length)];
     }
   }
+
+  if (filtered.length > 0) {
+    return filtered[Math.floor(Math.random() * filtered.length)];
+  }
+
   return diseases[Math.floor(Math.random() * diseases.length)];
 }

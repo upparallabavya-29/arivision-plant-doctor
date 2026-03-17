@@ -32,6 +32,7 @@ const ScanPage = () => {
   const [open, setOpen] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
   const [isCameraOpen, setIsCameraOpen] = useState(false);
+  const [isHealthy, setIsHealthy] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
@@ -46,6 +47,13 @@ const ScanPage = () => {
       setSelectedPlant(""); // Reset if no detection
     }
 
+    // Detect if healthy
+    if (filename.includes("healthy") || filename.includes("normal") || filename.includes("good")) {
+      setIsHealthy(true);
+    } else {
+      setIsHealthy(false);
+    }
+
     const reader = new FileReader();
     reader.onload = (e) => setImage(e.target?.result as string);
     reader.readAsDataURL(file);
@@ -57,7 +65,7 @@ const ScanPage = () => {
   };
 
   const onScanComplete = async () => {
-    const result = getRandomDiagnosis(selectedPlant);
+    const result = getRandomDiagnosis(selectedPlant, isHealthy);
 
     try {
       await saveScan({
@@ -142,6 +150,12 @@ const ScanPage = () => {
                 >
                   <X className="h-4 w-4" />
                 </button>
+                {isHealthy && (
+                  <div className="absolute left-3 top-3 flex items-center gap-1.5 rounded-full bg-primary/90 px-3 py-1 text-[10px] font-bold text-primary-foreground shadow-lg backdrop-blur-sm">
+                    <Check className="h-3 w-3" />
+                    HEALTHY LEAF DETECTED
+                  </div>
+                )}
               </div>
 
               {/* Plant Selection */}
